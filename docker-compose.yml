@@ -1,0 +1,65 @@
+services:
+  attacker:
+    build: ./attacker
+    container_name: attacker
+    tty: true
+    stdin_open: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    networks:
+      socnet:
+        ipv4_address: 172.28.0.10
+
+  victim:
+    build: ./victim
+    container_name: victim
+    tty: true
+    stdin_open: true
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYSLOG
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    command: /bin/bash /opt/victim/scripts/start_victim.sh
+    networks:
+      socnet:
+        ipv4_address: 172.28.0.20
+    volumes:
+      - ./logs/victim:/var/log/lab
+      - ./victim/scripts:/opt/victim/scripts:ro
+      - ./victim/config/suricata.yaml:/etc/suricata/suricata.yaml:ro
+      - ./victim/rules/local.rules:/var/lib/suricata/rules/local.rules:ro
+
+  soc:
+    build: ./soc
+    container_name: soc
+    tty: true
+    stdin_open: true
+    ports:
+      - "5601:5601"
+      - "9200:9200"
+    networks:
+      socnet:
+        ipv4_address: 172.28.0.30
+    volumes:
+      - ./soc/config/elasticsearch.yml:/etc/elasticsearch/elasticsearch.yml:ro
+      - ./soc/config/kibana.yml:/etc/kibana/kibana.yml:ro
+      - ./soc/config/filebeat.yml:/etc/filebeat/filebeat.yml:ro
+      - ./soc/scripts:/opt/soc/scripts:ro
+      - ./logs/victim:/data/victim:ro
+      - ./logs/soc/elasticsearch:/var/log/elasticsearch
+      - ./logs/soc/kibana:/var/log/kibana
+      - ./logs/soc/filebeat:/var/log/filebeat
+      - ./data/soc/elasticsearch:/var/lib/elasticsearch
+    command: /bin/bash /opt/soc/scripts/start_siem.sh
+
+
+networks:
+  socnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24

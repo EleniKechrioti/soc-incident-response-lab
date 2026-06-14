@@ -1,0 +1,30 @@
+filebeat.inputs:
+  - type: filestream
+    id: suricata-eve
+    enabled: true
+    paths:
+      - /data/victim/suricata/eve.json
+    parsers:
+      - ndjson:
+          overwrite_keys: true
+          add_error_key: true
+
+  - type: filestream
+    id: suricata-fast
+    enabled: true
+    paths:
+      - /data/victim/suricata/fast.log
+
+  - type: filestream
+    id: victim-syslog
+    enabled: true
+    paths:
+      - /data/victim/syslog.log
+
+output.elasticsearch:
+  hosts: ["http://127.0.0.1:9200"]
+
+setup.template.enabled: true
+setup.ilm.enabled: false
+
+logging.level: info

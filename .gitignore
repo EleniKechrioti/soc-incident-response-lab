@@ -1,0 +1,17 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+.env
+
+# data
+data/
+data/soc/elasticsearch/
+
+# Logs
+logs/
+*.log
+*.json
+
+# Python
+__pycache__/
+*.pyc
